@@ -337,8 +337,8 @@ func _check_items() -> void:
 	for it in items:
 		if it.taken:
 			continue
-		var dx := it.x - Cfg.BIRD_X
-		var dy := it.y - bird_y
+		var dx: float = it.x - Cfg.BIRD_X
+		var dy: float = it.y - bird_y
 		if sqrt(dx * dx + dy * dy) <= Cfg.BIRD_RADIUS + Cfg.POWERUP_RADIUS:
 			it.taken = true
 			powerups_taken += 1
