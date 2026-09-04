@@ -1,0 +1,36 @@
+; NeonFlap - projeto Godot 4
+; Gerado a mao: mantido enxuto de proposito, o Godot preenche o resto.
+
+config_version=5
+
+[application]
+
+config/name="NeonFlap"
+config/version="1.0.0"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon.png"
+boot_splash/bg_color=Color(0.031, 0.016, 0.094, 1)
+boot_splash/show_image=false
+
+[display]
+
+window/size/viewport_width=480
+window/size/viewport_height=854
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/handheld/orientation=1
+
+[input_devices]
+
+; O jogo trata InputEventScreenTouch diretamente; sem isso cada toque
+; viraria tambem um clique de mouse e daria dois pulos.
+pointing/emulate_mouse_from_touch=false
+pointing/emulate_touch_from_mouse=false
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+viewport/hdr_2d=true
+anti_aliasing/quality/msaa_2d=1

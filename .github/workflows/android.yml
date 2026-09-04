@@ -1,0 +1,106 @@
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Baixar Godot e os export templates
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          curl -fL --retry 3 -o godot.zip "$BASE/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fL --retry 3 -o templates.tpz "$BASE/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          unzip -q templates.tpz -d tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          mv tpz/templates "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          ./godot --version
+
+      - name: Gerar a keystore de debug
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+            -keypass android -keystore "$PWD/debug.keystore" -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" -validity 9999 \
+            -deststoretype pkcs12
+
+      - name: Apontar o Godot para o SDK do Android
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          # O nome do arquivo muda entre versoes do Godot; gravamos os dois
+          # formatos conhecidos para nao depender de qual esta em uso.
+          for f in "editor_settings-4.tres" "editor_settings-4.7.tres"; do
+            cat > "$HOME/.config/godot/$f" <<TRES
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_HOME}"
+          export/android/debug_keystore = "${PWD}/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          TRES
+          done
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+
+      - name: Importar o projeto
+        run: |
+          # A primeira importacao gera .godot/ e ja acusa erro de sintaxe
+          # nos scripts. Roda duas vezes porque dependencias entre
+          # class_name so resolvem na segunda passada.
+          ./godot --headless --import || true
+          ./godot --headless --import
+
+      - name: Exportar o APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          ./godot --headless --export-debug "Android" build/NeonFlap.apk
+          ls -lh build/
+          test -s build/NeonFlap.apk
+
+      - name: Conferir o APK
+        run: |
+          unzip -l build/NeonFlap.apk | head -20
+          echo "tamanho: $(du -h build/NeonFlap.apk | cut -f1)"
+
+      - name: Guardar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeonFlap-APK
+          path: build/NeonFlap.apk
+
+      - name: Publicar release com link direto
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest build/NeonFlap.apk \
+            --title "NeonFlap - APK mais recente" \
+            --notes "Build automatico do commit ${{ github.sha }}. Baixe o .apk e instale no celular."
