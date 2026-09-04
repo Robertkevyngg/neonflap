@@ -242,14 +242,13 @@ func _on_tap(pos: Vector2) -> void:
 					skin_index = i
 					_pick_skin()
 					return
-			if _back_rect().has_point(pos):
-				_go(MENU)
+			_go(MENU)
 		STATS:
 			_go(MENU)
 
 
 func _back_rect() -> Rect2:
-	return Rect2(Cfg.LOGICAL_W * 0.5 - 90, Cfg.LOGICAL_H - 92, 180, 60)
+	return Rect2(Cfg.LOGICAL_W * 0.5 - 110, Cfg.LOGICAL_H - 108, 220, 72)
 
 
 func _menu_item_rect(i: int) -> Rect2:
