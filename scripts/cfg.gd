@@ -61,8 +61,8 @@ const INK := Color(0.031, 0.020, 0.086)
 
 ## Multiplicador aplicado as cores "acesas". Acima de 1.0 o pixel passa
 ## do limiar de HDR e o bloom do Godot transforma em brilho neon.
-const NEON := 2.4
-const NEON_SOFT := 1.5
+const NEON := 1.0
+const NEON_SOFT := 1.0
 
 const PHASE_EVERY := 12
 
