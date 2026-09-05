@@ -61,7 +61,7 @@ func _ready() -> void:
 func _setup_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CANVAS
-	env.glow_enabled = true
+	env.glow_enabled = false
 	env.glow_intensity = 0.9
 	env.glow_bloom = 0.15
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
@@ -307,6 +307,7 @@ func _draw() -> void:
 	if fade > 0.0:
 		draw_rect(Rect2(-40, -40, Cfg.LOGICAL_W + 80, Cfg.LOGICAL_H + 80),
 				Color(0, 0, 0, fade), true)
+	Art.text_left(self, str(Engine.get_frames_per_second()) + " FPS  " + str(Engine.get_frames_drawn() % 100000), Vector2(8, 4), 17, Cfg.LIME)
 
 
 func _veil(alpha: float) -> void:
